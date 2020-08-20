@@ -51,17 +51,17 @@ dump_db () {
 ########
 
 PATH=/usr/local/bin:/usr/bin:/bin
-HOST=`hostname`               # Hostname
-DATE=`date +%Y-%m-%d_%Hh%Mm`  # Datestamp e.g 2002-09-21
-DOW=`date +%A`                # Day of the week e.g. Monday
-DNOW=`date +%u`               # Day number of the week 1 to 7 where 1 represents Monday
-DOM=`date +%d`                # Date of the Month e.g. 27
-M=`date +%B`                  # Month e.g January
-W=`date +%V`                  # Week Number e.g 37
-VER=1.0                       # Version Number
+HOST=$(hostname)               # Hostname
+DATE=$(date +%Y-%m-%d_%Hh%Mm)  # Datestamp e.g 2002-09-21
+DOW=$(date +%A)                # Day of the week e.g. Monday
+DNOW=$(date +%u)               # Day number of the week 1 to 7 where 1 represents Monday
+DOM=$(date +%d)                # Date of the Month e.g. 27
+M=$(date +%B)                  # Month e.g January
+W=$(date +%V)                  # Week Number e.g 37
+VER=1.0                        # Version Number
 
-LOGFILE=${BACKUPDIR}/influxdb-`date +%N`.log         # Logfile Name
-LOGERR=${BACKUPDIR}/ERRORS_INFLUXDB-`date +%N`.log   # Logfile Name
+LOGFILE=${BACKUPDIR}/influxdb-$(date +%N).log         # Logfile Name
+LOGERR=${BACKUPDIR}/ERRORS_INFLUXDB-$(date +%N).log   # Logfile Name
 
 # Create required directories
 # Check Backup Directory exists.
@@ -105,7 +105,7 @@ echo
 echo Backup of InfluxDB Server
 echo ======================================================================
 
-echo Backup Start `date`
+echo Backup Start $(date)
 echo ======================================================================
 
 # Monthly Full Backup of all Databases
@@ -140,11 +140,11 @@ for DB in ${DBNAMES}; do
     echo "Rotating 5 weeks Backups..."
 
     if [ "${W}" -le 05 ]; then
-      REMW=`expr 48 + ${W}`
+      REMW=$(expr 48 + ${W})
     elif [ "${W}" -lt 15 ]; then
-      REMW=0`expr ${W} - 5`
+      REMW=0$(expr ${W} - 5)
     else
-      REMW=`expr ${W} - 5`
+      REMW=$(expr ${W} - 5)
     fi
 
     rm -rfv "${BACKUPDIR}/weekly/${DB}/week_${REMW}".*
@@ -167,12 +167,12 @@ for DB in ${DBNAMES}; do
 done
 
 
-echo Backup End Time `date`
+echo Backup End Time $(date)
 echo ======================================================================
 
 echo Total disk space used for backup storage..
 echo Size - Location
-echo `du -hs "${BACKUPDIR}"`
+echo $(du -hs "${BACKUPDIR}")
 echo
 echo ======================================================================
 
