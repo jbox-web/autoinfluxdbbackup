@@ -41,8 +41,8 @@ DOWEEKLY=${DOWEEKLY:-6}
 dump_db () {
   local db=$1
   local dir=$2
-  echo "Saving InfluxDB database : $db"
-  influxd backup -portable -database $db -host $DBHOST:$DBPORT $dir
+  echo "Saving InfluxDB database : ${db}"
+  influxd backup -portable -database ${db} -host ${DBHOST}:${DBPORT} ${dir}
   return 0
 }
 
@@ -60,46 +60,46 @@ M=`date +%B`                  # Month e.g January
 W=`date +%V`                  # Week Number e.g 37
 VER=1.0                       # Version Number
 
-LOGFILE=$BACKUPDIR/influxdb-`date +%N`.log         # Logfile Name
-LOGERR=$BACKUPDIR/ERRORS_INFLUXDB-`date +%N`.log   # Logfile Name
+LOGFILE=${BACKUPDIR}/influxdb-`date +%N`.log         # Logfile Name
+LOGERR=${BACKUPDIR}/ERRORS_INFLUXDB-`date +%N`.log   # Logfile Name
 
 # Create required directories
 # Check Backup Directory exists.
-if [ ! -e "$BACKUPDIR" ]; then
-  mkdir -p "$BACKUPDIR"
+if [ ! -e "${BACKUPDIR}" ]; then
+  mkdir -p "${BACKUPDIR}"
 fi
 
 chmod o-x ${BACKUPDIR}
 chmod o-r ${BACKUPDIR}
 
 # Check Daily Directory exists.
-if [ ! -e "$BACKUPDIR/daily" ]; then
-  mkdir -p "$BACKUPDIR/daily"
+if [ ! -e "${BACKUPDIR}/daily" ]; then
+  mkdir -p "${BACKUPDIR}/daily"
 fi
 
 # Check Weekly Directory exists.
-if [ ! -e "$BACKUPDIR/weekly" ]; then
-  mkdir -p "$BACKUPDIR/weekly"
+if [ ! -e "${BACKUPDIR}/weekly" ]; then
+  mkdir -p "${BACKUPDIR}/weekly"
 fi
 
 # Check Monthly Directory exists.
-if [ ! -e "$BACKUPDIR/monthly" ]; then
-  mkdir -p "$BACKUPDIR/monthly"
+if [ ! -e "${BACKUPDIR}/monthly" ]; then
+  mkdir -p "${BACKUPDIR}/monthly"
 fi
 
 # IO redirection for logging.
-touch $LOGFILE
-exec 6>&1           # Link file descriptor #6 with stdout.
-                    # Saves stdout.
-exec > $LOGFILE     # stdout replaced with file $LOGFILE.
-touch $LOGERR
-exec 7>&2           # Link file descriptor #7 with stderr.
-                    # Saves stderr.
-exec 2> $LOGERR     # stderr replaced with file $LOGERR.
+touch ${LOGFILE}
+exec 6>&1             # Link file descriptor #6 with stdout.
+                      # Saves stdout.
+exec > ${LOGFILE}     # stdout replaced with file ${LOGFILE}.
+touch ${LOGERR}
+exec 7>&2             # Link file descriptor #7 with stderr.
+                      # Saves stderr.
+exec 2> ${LOGERR}     # stderr replaced with file ${LOGERR}.
 
 # Backup!
 echo ======================================================================
-echo AutoInfluxDBBackup VER $VER
+echo AutoInfluxDBBackup VER ${VER}
 echo https://github.com/jbox-web/autoinfluxdbbackup
 echo
 echo Backup of InfluxDB Server
@@ -109,59 +109,59 @@ echo Backup Start `date`
 echo ======================================================================
 
 # Monthly Full Backup of all Databases
-if [ "$DOM" = "01" ]; then
-  for MDB in $DBNAMES; do
+if [ "${DOM}" = "01" ]; then
+  for MDB in ${DBNAMES}; do
     # Check Monthly DB Directory exists.
-    if [ ! -e "$BACKUPDIR/monthly/$MDB" ]; then
-      mkdir -p "$BACKUPDIR/monthly/$MDB"
+    if [ ! -e "${BACKUPDIR}/monthly/${MDB}" ]; then
+      mkdir -p "${BACKUPDIR}/monthly/${MDB}"
     fi
 
-    echo Monthly Backup of $MDB...
+    echo "Monthly Backup of ${MDB}..."
 
-    dump_db "$MDB" "$BACKUPDIR/monthly/$MDB/${MDB}.$DATE.$M"
+    dump_db "${MDB}" "${BACKUPDIR}/monthly/${MDB}/${MDB}.${DATE}.${M}"
     echo ----------------------------------------------------------------------
   done
 fi
 
-for DB in $DBNAMES; do
+for DB in ${DBNAMES}; do
   # Check Daily DB Directory exists.
-  if [ ! -e "$BACKUPDIR/daily/$DB" ]; then
-    mkdir -p "$BACKUPDIR/daily/$DB"
+  if [ ! -e "${BACKUPDIR}/daily/${DB}" ]; then
+    mkdir -p "${BACKUPDIR}/daily/${DB}"
   fi
 
   # Check Weekly DB Directory exists.
-  if [ ! -e "$BACKUPDIR/weekly/$DB" ]; then
-    mkdir -p "$BACKUPDIR/weekly/$DB"
+  if [ ! -e "${BACKUPDIR}/weekly/${DB}" ]; then
+    mkdir -p "${BACKUPDIR}/weekly/${DB}"
   fi
 
   # Weekly Backup
-  if [ "$DNOW" = "$DOWEEKLY" ]; then
-    echo Weekly Backup of Database \( $DB \)
-    echo Rotating 5 weeks Backups...
+  if [ "${DNOW}" = "${DOWEEKLY}" ]; then
+    echo "Weekly Backup of Database (${DB})"
+    echo "Rotating 5 weeks Backups..."
 
-    if [ "$W" -le 05 ]; then
-      REMW=`expr 48 + $W`
-    elif [ "$W" -lt 15 ]; then
-      REMW=0`expr $W - 5`
+    if [ "${W}" -le 05 ]; then
+      REMW=`expr 48 + ${W}`
+    elif [ "${W}" -lt 15 ]; then
+      REMW=0`expr ${W} - 5`
     else
-      REMW=`expr $W - 5`
+      REMW=`expr ${W} - 5`
     fi
 
-    rm -rfv "$BACKUPDIR/weekly/$DB/week_$REMW".*
+    rm -rfv "${BACKUPDIR}/weekly/${DB}/week_${REMW}".*
     echo
 
-    dump_db "$DB" "$BACKUPDIR/weekly/$DB/week_${W}.$DATE"
+    dump_db "${DB}" "${BACKUPDIR}/weekly/${DB}/week_${W}.${DATE}"
     echo ----------------------------------------------------------------------
 
   # Daily Backup
   else
-    echo Daily Backup of Database \( $DB \)
-    echo Rotating last weeks Backup...
+    echo "Daily Backup of Database (${DB})"
+    echo "Rotating last weeks Backup..."
 
-    rm -rfv "$BACKUPDIR/daily/$DB"/*."$DOW"
+    rm -rfv "${BACKUPDIR}/daily/${DB}"/*."${DOW}"
     echo
 
-    dump_db "$DB" "$BACKUPDIR/daily/$DB/$DATE.$DOW"
+    dump_db "${DB}" "${BACKUPDIR}/daily/${DB}/${DATE}.${DOW}"
     echo ----------------------------------------------------------------------
   fi
 done
@@ -172,7 +172,7 @@ echo ======================================================================
 
 echo Total disk space used for backup storage..
 echo Size - Location
-echo `du -hs "$BACKUPDIR"`
+echo `du -hs "${BACKUPDIR}"`
 echo
 echo ======================================================================
 
@@ -182,39 +182,39 @@ exec 1>&7 7>&-      # Restore stdout and close file descriptor #7.
 
 # Send mail report
 if [ "$MAILCONTENT" = "log" ]; then
-  cat "$LOGFILE" | mail -s "InfluxDB Backup Log for $HOST - $DATE" $MAILADDR
-  if [ -s "$LOGERR" ]; then
-    cat "$LOGERR" | mail -s "ERRORS REPORTED: InfluxDB Backup error Log for $HOST - $DATE" $MAILADDR
+  cat "${LOGFILE}" | mail -s "InfluxDB Backup Log for ${HOST} - ${DATE}" ${MAILADDR}
+  if [ -s "${LOGERR}" ]; then
+    cat "${LOGERR}" | mail -s "ERRORS REPORTED: InfluxDB Backup error Log for ${HOST} - ${DATE}" ${MAILADDR}
   fi
 
 elif [ "$MAILCONTENT" = "quiet" ]; then
-  if [ -s "$LOGERR" ]; then
-    cat "$LOGERR" | mail -s "ERRORS REPORTED: InfluxDB Backup error Log for $HOST - $DATE" $MAILADDR
-    cat "$LOGFILE" | mail -s "InfluxDB Backup Log for $HOST - $DATE" $MAILADDR
+  if [ -s "${LOGERR}" ]; then
+    cat "${LOGERR}" | mail -s "ERRORS REPORTED: InfluxDB Backup error Log for ${HOST} - ${DATE}" ${MAILADDR}
+    cat "${LOGFILE}" | mail -s "InfluxDB Backup Log for ${HOST} - ${DATE}" ${MAILADDR}
   fi
 
 else
-  if [ -s "$LOGERR" ]; then
-    cat "$LOGFILE"
+  if [ -s "${LOGERR}" ]; then
+    cat "${LOGFILE}"
     echo
     echo "###### WARNING ######"
     echo "Errors reported during AutoInfluxDBBackup execution.. Backup failed"
     echo "Error log below.."
-    cat "$LOGERR"
+    cat "${LOGERR}"
   else
-    cat "$LOGFILE"
+    cat "${LOGFILE}"
   fi
 fi
 
 # Compute exit status
-if [ -s "$LOGERR" ]; then
+if [ -s "${LOGERR}" ]; then
   STATUS=1
 else
   STATUS=0
 fi
 
 # Clean up Logfile
-rm -f "$LOGFILE"
-rm -f "$LOGERR"
+rm -f "${LOGFILE}"
+rm -f "${LOGERR}"
 
-exit $STATUS
+exit ${STATUS}
